@@ -1,0 +1,16 @@
+rule XMP_iid_DD55D8D4
+{
+    meta:
+        description = "Detects the specific XMP identifier XMP.iid:DD55D8D4"
+        author = " ? "
+        date = "2026-07-30"
+        reference = "Custom hunt"
+        score = 60
+        tags = "xmp, metadata, hunting"
+
+    strings:
+        $xmp = "XMP.iid:DD55D8D4" ascii wide // change obviously to fit your hunting needs
+
+    condition:
+        $xmp
+}
