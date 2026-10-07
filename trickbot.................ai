@@ -1,0 +1,65 @@
+import "pe"
+
+rule TrickBot_Module_Or_Payload
+{
+    meta:
+        description = "Detects unpacked TrickBot payloads and modules via config and module strings"
+        author = "defensive hunting rule"
+        malware_family = "TrickBot"
+        reference = "https://malpedia.caad.fkie.fraunhofer.de/details/win.trickbot"
+        date = "2026-10-07"
+        score = 80
+
+    strings:
+        $cfg1 = "<moduleconfig>" ascii wide
+        $cfg2 = "</moduleconfig>" ascii wide
+        $cfg3 = "<autostart>" ascii wide
+        $cfg4 = "<needinfo name=\"id\"" ascii wide
+        $cfg5 = "<mcconf>" ascii wide
+
+        $mod1 = "injectDll" ascii wide nocase
+        $mod2 = "systeminfo" ascii wide
+        $mod3 = "pwgrab" ascii wide nocase
+        $mod4 = "networkDll" ascii wide nocase
+        $mod5 = "shareDll" ascii wide nocase
+        $mod6 = "importDll" ascii wide nocase
+        $mod7 = "wormDll" ascii wide nocase
+        $mod8 = "cookiesDll" ascii wide nocase
+
+        $dbg1 = "inject_via_remotethread" ascii
+        $dbg2 = "ModuleHandle 0x%08X" wide
+        $dbg3 = "unknown Ctl" wide
+        $dbg4 = "WormShare" ascii
+        $dbg5 = "DomainGrabber" ascii
+        $dbg6 = "Cookies send failure: servers unavailable" ascii
+
+    condition:
+        uint16(0) == 0x5A4D and
+        filesize < 5MB and
+        (
+            (2 of ($cfg*) and 1 of ($mod*)) or
+            (1 of ($cfg*) and 2 of ($dbg*)) or
+            3 of ($dbg*)
+        )
+}
+
+rule TrickBot_Config_XML
+{
+    meta:
+        description = "Detects decrypted TrickBot module or main config XML"
+        author = "defensive hunting rule"
+        malware_family = "TrickBot"
+        date = "2026-10-07"
+
+    strings:
+        $a = "<moduleconfig>" ascii wide
+        $b = "</moduleconfig>" ascii wide
+        $c = "<autostart>" ascii wide
+        $d = "<needinfo" ascii wide
+        $e = "<gtag>" ascii wide
+        $f = "<servs>" ascii wide
+
+    condition:
+        filesize < 2MB and
+        4 of them
+}
